@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Nexus WebBT – Session</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Nexus WebBT</div>
+    <nav class="nav">
+      <a href="/" class="nav-link active">Session</a>
+      <a href="/settings" class="nav-link">Settings</a>
+      <a href="/videos" class="nav-link">Videos</a>
+      <a href="/bridge" class="nav-link">Bridge</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="grid">
+      <div class="card">
+        <h2>Session Control</h2>
+        <div class="form-row">
+          <label>Pre-wait (min)</label>
+          <input type="number" id="preWait" min="0" value="5">
+        </div>
+        <div class="form-row">
+          <label>Decision hold (min)</label>
+          <input type="number" id="decisionHold" min="0" value="15">
+        </div>
+        <div class="form-row">
+          <label>Punishment delay (min)</label>
+          <input type="number" id="punDelay" min="0" value="0">
+        </div>
+        <div class="form-row">
+          <label>Main duration range (min)</label>
+          <div class="inline-inputs">
+            <input type="number" id="mainMin" min="1" value="30">
+            <span>to</span>
+            <input type="number" id="mainMax" min="1" value="120">
+          </div>
+        </div>
+        <div class="button-row">
+          <button id="btnStart" onclick="startSession()">Start Session</button>
+          <button id="btnAbort" class="danger" onclick="abortSession()">Abort (testing only)</button>
+        </div>
+        <p class="hint">
+          Once started, controls lock and Nexus handles the timing.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Current Status</h2>
+        <p><strong>Phase:</strong> <span id="phase">idle</span></p>
+        <p><strong>Time remaining (this phase):</strong> <span id="timeRemaining">0:00</span></p>
+        <p><strong>Head violations:</strong> <span id="headCount">0</span></p>
+        <p><strong>Voice:</strong></p>
+        <p id="mistressText" class="mistress-text">
+          Waiting to begin…
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <div id="punishOverlay" class="overlay hidden">
+    <div class="overlay-inner">
+      <iframe id="punishFrame" src="" class="overlay-frame"></iframe>
+      <button class="overlay-button" onclick="userTriedClosePunish()">I can't watch this</button>
+      <p class="overlay-note">
+        Closing this early will change your time.
+      </p>
+    </div>
+  </div>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Nexus WebBT – Focus Videos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Nexus WebBT</div>
+    <nav class="nav">
+      <a href="/" class="nav-link">Session</a>
+      <a href="/settings" class="nav-link">Settings</a>
+      <a href="/videos" class="nav-link active">Videos</a>
+      <a href="/bridge" class="nav-link">Bridge</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="grid">
+      <div class="card">
+        <h2>Video URLs</h2>
+        <p>One URL per line. Nexus may randomly pick from these during certain phases.</p>
+        <textarea id="videoList" class="textarea"></textarea>
+        <div class="form-row checkbox-row">
+          <label><input type="checkbox" id="videoEnabled"> Enable focus videos</label>
+        </div>
+        <div class="button-row">
+          <button onclick="saveVideos()">Save</button>
+          <button onclick="testRandomVideo()">Test random video</button>
+        </div>
+        <p id="videoStatus" class="status-text"></p>
+      </div>
+    </section>
+
+    <div id="videoOverlay" class="overlay hidden">
+      <div class="overlay-inner">
+        <iframe id="videoFrame" src="" class="overlay-frame"></iframe>
+        <button class="overlay-button" onclick="closeTestOverlay()">Close test video</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadVideos() {
+      try {
+        const res = await fetch("/video_config");
+        const data = await res.json();
+        const urls = data.video_urls || [];
+        document.getElementById("videoList").value = urls.join("\n");
+        document.getElementById("videoEnabled").checked = !!data.video_enabled;
+        document.getElementById("videoStatus").innerText = "Loaded video configuration.";
+      } catch (e) {
+        document.getElementById("videoStatus").innerText = "Failed to load: " + e;
+      }
+    }
+
+    async function saveVideos() {
+      const raw = document.getElementById("videoList").value;
+      const enabled = document.getElementById("videoEnabled").checked;
+      const urls = raw.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+      const s = document.getElementById("videoStatus");
+      s.innerText = "Saving…";
+      try {
+        const res = await fetch("/video_config", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ video_urls: urls, video_enabled: enabled })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Error: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Saved.";
+        }
+      } catch (e) {
+        s.innerText = "Failed to save: " + e;
+      }
+    }
+
+    async function testRandomVideo() {
+      try {
+        const res = await fetch("/video_random");
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          document.getElementById("videoStatus").innerText =
+            "Error: " + (data.error || res.statusText);
+          return;
+        }
+        const url = data.url;
+        const overlay = document.getElementById("videoOverlay");
+        const frame = document.getElementById("videoFrame");
+        frame.src = url;
+        overlay.classList.remove("hidden");
+      } catch (e) {
+        document.getElementById("videoStatus").innerText =
+          "Failed to fetch random video: " + e;
+      }
+    }
+
+    function closeTestOverlay() {
+      const overlay = document.getElementById("videoOverlay");
+      const frame = document.getElementById("videoFrame");
+      overlay.classList.add("hidden");
+      frame.src = "";
+    }
+
+    document.addEventListener("DOMContentLoaded", loadVideos);
+  </script>
+</body>
+</html>

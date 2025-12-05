@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Nexus WebBT – Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Nexus WebBT</div>
+    <nav class="nav">
+      <a href="/" class="nav-link">Session</a>
+      <a href="/settings" class="nav-link active">Settings</a>
+      <a href="/videos" class="nav-link">Videos</a>
+      <a href="/bridge" class="nav-link">Bridge</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="grid">
+      <div class="card">
+        <h2>ESP32 Lock Controller</h2>
+        <p>Set the URL of your ESP32 lock controller.</p>
+        <div class="form-row">
+          <label>ESP32 URL</label>
+          <input type="text" id="esp32Url" placeholder="http://192.168.1.50">
+        </div>
+        <button onclick="saveEsp32()">Save</button>
+        <div class="button-row">
+          <button onclick="testLock()">Test Lock</button>
+          <button onclick="testUnlock()">Test Unlock</button>
+        </div>
+        <p id="esp32Status" class="status-text"></p>
+      </div>
+
+      <div class="card">
+        <h2>Session Rules & Behaviour</h2>
+        <p>
+          These settings control how strict Nexus is and how it reacts to your movements
+          when you're watching in the browser or headset.
+        </p>
+
+        <h3>Session Rules</h3>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkStrictMode">
+            Strict mode (no abort, no changing rules mid-session)
+          </label>
+        </div>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkHardcoreMode">
+            Hardcore mode (harsher timing changes)
+          </label>
+        </div>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkLockTo7">
+            Lockout until 07:00 (if the timer ends before 07:00, you remain locked)
+          </label>
+        </div>
+
+        <hr style="border-color:#1f2937;margin:0.7rem 0;">
+
+        <h3>Head Tracking & Focus</h3>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkHeadTrack">
+            Enable head tracking (for compatible browsers/headsets)
+          </label>
+        </div>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkVideoAutopause">
+            Dim focus video when you look away
+          </label>
+        </div>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkMistressControl">
+            Let Nexus dynamically tighten sensitivity over time
+          </label>
+        </div>
+
+        <h3>User Bounds (Nexus picks inside these)</h3>
+        <p class="hint">Lower values = stricter / more sensitive detection.</p>
+
+        <div class="form-row">
+          <label>Look down angle (deg):</label>
+          <div class="inline-inputs">
+            <span>min</span>
+            <input type="number" id="minDown" min="5" max="80" value="20">
+            <span>max</span>
+            <input type="number" id="maxDown" min="5" max="80" value="45">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Look away angle (deg):</label>
+          <div class="inline-inputs">
+            <span>min</span>
+            <input type="number" id="minAway" min="5" max="90" value="25">
+            <span>max</span>
+            <input type="number" id="maxAway" min="5" max="90" value="60">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Stillness timeout (sec):</label>
+          <div class="inline-inputs">
+            <span>min</span>
+            <input type="number" id="minStill" min="1" max="60" value="5">
+            <span>max</span>
+            <input type="number" id="maxStill" min="1" max="120" value="20">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Debounce (ms) before counting a new violation:</label>
+          <div class="inline-inputs">
+            <span>min</span>
+            <input type="number" id="minDebounce" min="500" max="20000" value="3000">
+            <span>max</span>
+            <input type="number" id="maxDebounce" min="500" max="30000" value="7000">
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button onclick="saveHeadConfig()">Save behaviour settings</button>
+          <button onclick="saveModes()">Save strict / hardcore / lockout</button>
+        </div>
+        <p id="headCfgStatus" class="status-text"></p>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-top:1rem;">
+      <div class="card">
+        <h2>Voice Assistant</h2>
+        <p>
+          Let your browser read out key status messages. This uses the browser's built-in
+          speech system (no extra install required).
+        </p>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkVoiceEnabled">
+            Enable voice announcements
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>Persona (tone)</label>
+          <select id="voicePersona">
+            <option value="neutral">Neutral</option>
+            <option value="firm">Firm</option>
+            <option value="playful">Playful</option>
+            <option value="strict">Strict</option>
+          </select>
+        </div>
+
+        <p class="hint">
+          The persona influences how messages are phrased in future,
+          but the actual audio voice depends on your device/browser settings.
+        </p>
+
+        <div class="button-row">
+          <button onclick="saveVoiceConfig()">Save voice settings</button>
+          <button onclick="testVoice()">Test voice line</button>
+        </div>
+        <p id="voiceStatus" class="status-text"></p>
+      </div>
+
+      <div class="card">
+        <h2>Video Behaviour</h2>
+        <p>
+          Control when and how Nexus shows focus videos during a session.
+        </p>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkVideoEnabledGlobal">
+            Enable video during sessions
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>When should video start?</label>
+          <select id="videoStartMode">
+            <option value="main_phase">When main phase begins (default)</option>
+            <option value="immediate">Immediately when session starts</option>
+            <option value="delayed">After X minutes into the main phase</option>
+          </select>
+        </div>
+
+        <div class="form-row" id="videoDelayRow">
+          <label>Delay into main phase (minutes)</label>
+          <input type="number" id="videoStartDelayMin" min="0" value="0">
+        </div>
+
+        <div class="form-row">
+          <label>How should video be displayed?</label>
+          <select id="videoDisplayMode">
+            <option value="auto">Fullscreen with popup fallback (recommended)</option>
+            <option value="fullscreen">Fullscreen only</option>
+            <option value="popup">Popup window only</option>
+          </select>
+        </div>
+
+        <div class="button-row">
+          <button onclick="saveVideoBehaviour()">Save video behaviour</button>
+        </div>
+        <p id="videoBehaviourStatus" class="status-text"></p>
+        <p id="videoLockedNote" class="status-text"></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function toggleVideoDelayVisibility() {
+      const mode = document.getElementById("videoStartMode").value;
+      const row = document.getElementById("videoDelayRow");
+      if (mode === "delayed") {
+        row.style.display = "block";
+      } else {
+        row.style.display = "none";
+      }
+    }
+
+    async function loadEsp32() {
+      try {
+        const res = await fetch("/config");
+        const data = await res.json();
+
+        document.getElementById("esp32Url").value = data.esp32_url || "";
+        document.getElementById("esp32Status").innerText =
+          "Current: " + (data.esp32_url || "not set");
+
+        document.getElementById("chkStrictMode").checked = !!data.strict_mode;
+        document.getElementById("chkHardcoreMode").checked = !!data.hardcore_mode;
+        document.getElementById("chkLockTo7").checked = !!data.lock_to_7am;
+
+        document.getElementById("chkVoiceEnabled").checked = !!data.voice_enabled;
+        document.getElementById("voicePersona").value = data.voice_persona || "neutral";
+
+        // Video behaviour
+        document.getElementById("chkVideoEnabledGlobal").checked =
+          data.video_enabled !== false;
+        document.getElementById("videoStartMode").value =
+          data.video_start_mode || "main_phase";
+        document.getElementById("videoStartDelayMin").value =
+          data.video_start_after_min || 0;
+        document.getElementById("videoDisplayMode").value =
+          data.video_display_mode || "auto";
+
+        toggleVideoDelayVisibility();
+      } catch (e) {
+        document.getElementById("esp32Status").innerText =
+          "Failed to load config: " + e;
+      }
+    }
+
+    async function saveEsp32() {
+      const url = document.getElementById("esp32Url").value.trim();
+      const s = document.getElementById("esp32Status");
+      s.innerText = "Saving…";
+      try {
+        const res = await fetch("/config", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ esp32_url: url })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Error: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Saved: " + data.config.esp32_url;
+        }
+      } catch (e) {
+        s.innerText = "Failed to save ESP32 URL: " + e;
+      }
+    }
+
+    async function testLock() {
+      const s = document.getElementById("esp32Status");
+      s.innerText = "Sending LOCK…";
+      try {
+        const res = await fetch("/test_lock", { method: "POST" });
+        const data = await res.json();
+        s.innerText = data.ok ? "Lock fired successfully." : "Lock FAILED.";
+      } catch (e) {
+        s.innerText = "Error firing lock: " + e;
+      }
+    }
+
+    async function testUnlock() {
+      const s = document.getElementById("esp32Status");
+      s.innerText = "Sending UNLOCK…";
+      try {
+        const res = await fetch("/test_unlock", { method: "POST" });
+        const data = await res.json();
+        s.innerText = data.ok ? "Unlock fired successfully." : "Unlock FAILED.";
+      } catch (e) {
+        s.innerText = "Error firing unlock: " + e;
+      }
+    }
+
+    async function loadHeadConfig() {
+      try {
+        const res = await fetch("/head_config");
+        const data = await res.json();
+
+        document.getElementById("chkHeadTrack").checked = !!data.head_tracking_enabled;
+        document.getElementById("chkVideoAutopause").checked = !!data.video_autopause_enabled;
+        document.getElementById("chkMistressControl").checked = !!data.head_mistress_control;
+
+        document.getElementById("minDown").value = data.head_user_min_down_deg;
+        document.getElementById("maxDown").value = data.head_user_max_down_deg;
+        document.getElementById("minAway").value = data.head_user_min_away_deg;
+        document.getElementById("maxAway").value = data.head_user_max_away_deg;
+        document.getElementById("minStill").value = data.head_user_min_still_sec;
+        document.getElementById("maxStill").value = data.head_user_max_still_sec;
+        document.getElementById("minDebounce").value = data.head_user_min_debounce_ms;
+        document.getElementById("maxDebounce").value = data.head_user_max_debounce_ms;
+
+        document.getElementById("headCfgStatus").innerText =
+          "Loaded behaviour settings.";
+      } catch (e) {
+        document.getElementById("headCfgStatus").innerText =
+          "Failed to load behaviour settings: " + e;
+      }
+    }
+
+    async function saveHeadConfig() {
+      const s = document.getElementById("headCfgStatus");
+      s.innerText = "Saving…";
+      try {
+        const payload = {
+          head_tracking_enabled: document.getElementById("chkHeadTrack").checked,
+          video_autopause_enabled: document.getElementById("chkVideoAutopause").checked,
+          head_mistress_control: document.getElementById("chkMistressControl").checked,
+          head_user_min_down_deg: document.getElementById("minDown").value,
+          head_user_max_down_deg: document.getElementById("maxDown").value,
+          head_user_min_away_deg: document.getElementById("minAway").value,
+          head_user_max_away_deg: document.getElementById("maxAway").value,
+          head_user_min_still_sec: document.getElementById("minStill").value,
+          head_user_max_still_sec: document.getElementById("maxStill").value,
+          head_user_min_debounce_ms: document.getElementById("minDebounce").value,
+          head_user_max_debounce_ms: document.getElementById("maxDebounce").value,
+        };
+
+        const res = await fetch("/head_config", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Error saving: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Behaviour settings saved.";
+        }
+      } catch (e) {
+        s.innerText = "Failed to save behaviour: " + e;
+      }
+    }
+
+    async function saveModes() {
+      const s = document.getElementById("headCfgStatus");
+      s.innerText = "Saving modes…";
+      try {
+        const payload = {
+          strict_mode: document.getElementById("chkStrictMode").checked,
+          hardcore_mode: document.getElementById("chkHardcoreMode").checked,
+          lock_to_7am: document.getElementById("chkLockTo7").checked,
+        };
+        const res = await fetch("/config", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Error saving modes: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Modes saved.";
+        }
+      } catch (e) {
+        s.innerText = "Failed to save modes: " + e;
+      }
+    }
+
+    async function saveVoiceConfig() {
+      const enabled = document.getElementById("chkVoiceEnabled").checked;
+      const persona = document.getElementById("voicePersona").value;
+      const s = document.getElementById("voiceStatus");
+      s.innerText = "Saving…";
+      try {
+        const res = await fetch("/config", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            voice_enabled: enabled,
+            voice_persona: persona
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Error: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Voice settings saved.";
+        }
+      } catch (e) {
+        s.innerText = "Failed to save voice settings: " + e;
+      }
+    }
+
+    function testVoice() {
+      const enabled = document.getElementById("chkVoiceEnabled").checked;
+      const persona = document.getElementById("voicePersona").value;
+      const s = document.getElementById("voiceStatus");
+      s.innerText = "Speaking test line (if supported)…";
+
+      if (!('speechSynthesis' in window)) {
+        s.innerText = "This browser does not support speechSynthesis.";
+        return;
+      }
+      if (!enabled) {
+        s.innerText = "Enable voice first, then try again.";
+        return;
+      }
+
+      let line = "This is a test line from Nexus.";
+      if (persona === "firm") {
+        line = "Test message. Focus, and listen carefully.";
+      } else if (persona === "playful") {
+        line = "Just checking your speakers are awake.";
+      } else if (persona === "strict") {
+        line = "Test message. No excuses about not hearing me later.";
+      }
+
+      const utter = new SpeechSynthesisUtterance(line);
+      if (persona === "firm") {
+        utter.rate = 0.95;
+        utter.pitch = 0.9;
+      } else if (persona === "playful") {
+        utter.rate = 1.05;
+        utter.pitch = 1.1;
+      } else if (persona === "strict") {
+        utter.rate = 0.9;
+        utter.pitch = 0.85;
+      }
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    }
+
+    async function saveVideoBehaviour() {
+      const s = document.getElementById("videoBehaviourStatus");
+      s.innerText = "Saving…";
+      try {
+        const payload = {
+          video_enabled: document.getElementById("chkVideoEnabledGlobal").checked,
+          video_start_mode: document.getElementById("videoStartMode").value,
+          video_start_after_min: parseInt(
+            document.getElementById("videoStartDelayMin").value || "0",
+            10
+          ),
+          video_display_mode: document.getElementById("videoDisplayMode").value,
+        };
+        const res = await fetch("/config", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Error saving video behaviour: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Video behaviour saved.";
+        }
+      } catch (e) {
+        s.innerText = "Failed to save video behaviour: " + e;
+      }
+    }
+
+    async function applyVideoLockState() {
+      try {
+        const res = await fetch("/session_status");
+        const data = await res.json();
+        const locked = !!data.active;
+        const ids = [
+          "chkVideoEnabledGlobal",
+          "videoStartMode",
+          "videoStartDelayMin",
+          "videoDisplayMode"
+        ];
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.disabled = locked;
+        });
+        const note = document.getElementById("videoLockedNote");
+        if (note) {
+          note.innerText = locked ? "Locked during active session." : "";
+        }
+      } catch (e) {
+        console.log("applyVideoLockState error:", e);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadEsp32();
+      loadHeadConfig();
+      toggleVideoDelayVisibility();
+      applyVideoLockState();
+      document.getElementById("videoStartMode").addEventListener("change", toggleVideoDelayVisibility);
+      // Re-check lock state every few seconds
+      setInterval(applyVideoLockState, 5000);
+    });
+  </script>
+</body>
+</html>

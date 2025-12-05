@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Nexus WebBT – Bridge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Nexus WebBT</div>
+    <nav class="nav">
+      <a href="/" class="nav-link">Session</a>
+      <a href="/settings" class="nav-link">Settings</a>
+      <a href="/videos" class="nav-link">Videos</a>
+      <a href="/bridge" class="nav-link active">Bridge</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="grid">
+      <div class="card">
+        <h2>External Bridge / Automation</h2>
+        <p>
+          Configure a generic HTTP endpoint that Nexus can send JSON events to.
+          This can be used with automation tools, your own scripts, or other services.
+        </p>
+        <div class="form-row checkbox-row">
+          <label>
+            <input type="checkbox" id="chkBridgeEnabled">
+            Enable external bridge
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Bridge endpoint URL</label>
+          <input type="text" id="bridgeUrl" placeholder="http://127.0.0.1:9000/nexus">
+        </div>
+        <div class="button-row">
+          <button onclick="saveBridgeConfig()">Save bridge config</button>
+          <button onclick="testBridge()">Send test event</button>
+        </div>
+        <p class="hint">
+          Example flow: Nexus → sends a small JSON payload to this URL → your script
+          or service decides what to do with it.
+        </p>
+        <p id="bridgeStatus" class="status-text"></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    async function loadBridgeConfig() {
+      try {
+        const res = await fetch("/bridge_config");
+        const data = await res.json();
+        document.getElementById("chkBridgeEnabled").checked =
+          !!data.external_bridge_enabled;
+        document.getElementById("bridgeUrl").value =
+          data.external_bridge_url || "";
+        document.getElementById("bridgeStatus").innerText =
+          "Bridge config loaded.";
+      } catch (e) {
+        document.getElementById("bridgeStatus").innerText =
+          "Failed to load bridge config: " + e;
+      }
+    }
+
+    async function saveBridgeConfig() {
+      const enabled = document.getElementById("chkBridgeEnabled").checked;
+      const url = document.getElementById("bridgeUrl").value.trim();
+      const s = document.getElementById("bridgeStatus");
+      s.innerText = "Saving…";
+      try {
+        const res = await fetch("/bridge_config", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            external_bridge_enabled: enabled,
+            external_bridge_url: url
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Error: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Bridge settings saved.";
+        }
+      } catch (e) {
+        s.innerText = "Failed to save bridge settings: " + e;
+      }
+    }
+
+    async function testBridge() {
+      const s = document.getElementById("bridgeStatus");
+      s.innerText = "Sending test event…";
+      try {
+        const res = await fetch("/bridge_test", { method: "POST" });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          s.innerText = "Bridge test failed: " + (data.error || res.statusText);
+        } else {
+          s.innerText = "Bridge test sent (HTTP " + data.status_code + ").";
+        }
+      } catch (e) {
+        s.innerText = "Bridge test error: " + e;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadBridgeConfig);
+  </script>
+</body>
+</html>
