@@ -1,0 +1,14 @@
+[Unit]
+Description=Nexus
+After=network.target
+
+[Service]
+User=nexus
+WorkingDirectory=/opt/nexus
+Environment=NEXUS_PORT=8080
+Environment=PATH=/opt/nexus/venv/bin
+ExecStart=/opt/nexus/venv/bin/python backend/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
